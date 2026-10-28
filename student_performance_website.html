@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Based Student Performance Prediction Platform</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Three.js for 3D Neural/Particle Background with Fallbacks -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+    }
+  </script>
+
+  <!-- Chart.js for Educational Analytics Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Inter & JetBrains Mono Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f4ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              dark: '#030712',
+              card: '#0b0f19',
+              border: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Modern Dark Glassmorphic Styles */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(51, 65, 85, 0.7);
+    }
+
+    .glass-card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card-hover:hover {
+      transform: translateY(-4px);
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Floating Animation for Visual Media & Cards */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    .animate-float {
+      animation: floatSlow 5s ease-in-out infinite;
+    }
+
+    /* Glowing Pulse Border Effect */
+    @keyframes glowPulse {
+      0%, 100% { border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
+      50% { border-color: rgba(168, 85, 247, 0.7); box-shadow: 0 0 25px rgba(168, 85, 247, 0.4); }
+    }
+    .animate-glow-border {
+      animation: glowPulse 4s ease-in-out infinite;
+    }
+
+    /* Soft Glow utilities for Dark Mode */
+    .glow-indigo {
+      box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.3);
+    }
+    .glow-emerald {
+      box-shadow: 0 10px 30px -5px rgba(16, 185, 129, 0.3);
+    }
+    .glow-rose {
+      box-shadow: 0 10px 30px -5px rgba(244, 63, 94, 0.3);
+    }
+
+    /* ThreeJS Background Canvas */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Active Decision Tree Node Highlight */
+    .active-tree-node {
+      border-color: #6366f1 !important;
+      background: rgba(99, 102, 241, 0.25) !important;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+      transform: scale(1.03);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+  <!-- 3D BACKGROUND CANVAS -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- MAIN APP CONTAINER WRAPPED IN REALISTIC BROWSER CHASSIS -->
+  <div class="relative z-10 max-w-7xl mx-auto p-2 sm:p-4 md:p-6 my-2 md:my-6">
+    
+    <!-- REALISTIC BROWSER HEADER / DOMAIN BAR MOCKUP -->
+    <div class="glass-panel rounded-t-2xl border-b border-slate-700/60 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+      <!-- Window Controls & Title -->
+      <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+        <div class="flex items-center space-x-2">
+          <div class="w-3 h-3 rounded-full bg-rose-500 hover:opacity-80 transition cursor-pointer" title="Close"></div>
+          <div class="w-3 h-3 rounded-full bg-amber-500 hover:opacity-80 transition cursor-pointer" title="Minimize"></div>
+          <div class="w-3 h-3 rounded-full bg-emerald-500 hover:opacity-80 transition cursor-pointer" title="Expand"></div>
+        </div>
+        <div class="flex items-center space-x-2 text-xs text-slate-400 font-mono">
+          <i class="fa-solid fa-lock text-emerald-400 text-[10px]"></i>
+          <span>Secure Academic AI Portal</span>
+        </div>
+      </div>
+
+      <!-- Real-World URL Address Bar -->
+      <div class="w-full sm:max-w-md md:max-w-lg bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 flex items-center space-x-2 text-xs font-mono text-slate-300 shadow-inner">
+        <i class="fa-solid fa-globe text-indigo-400"></i>
+        <span class="text-indigo-400 font-bold">https://</span>
+        <span class="text-slate-100 font-semibold">ai-student-analytics.edu</span>
+        <span class="text-slate-400">/predict-dashboard</span>
+        <i class="fa-solid fa-rotate-right text-slate-500 text-[10px] ml-auto hover:text-slate-200 cursor-pointer" onclick="location.reload()" title="Refresh Page"></i>
+      </div>
+
+      <!-- Live Status Badge -->
+      <div class="hidden md:flex items-center space-x-2 text-xs">
+        <span class="flex h-2 w-2 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span class="text-emerald-400 font-mono text-[11px] font-semibold">ML Engine Active</span>
+      </div>
+    </div>
+
+    <!-- MAIN BROWSER CONTENT BODY -->
+    <div class="glass-panel rounded-b-2xl p-4 sm:p-6 md:p-8 space-y-8 border-t-0 shadow-xl">
+
+      <!-- TOP DASHBOARD NAVIGATION & HEADER -->
+      <header class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-1 rounded-md bg-indigo-950/80 border border-indigo-700 text-indigo-300 text-xs font-semibold font-mono">
+              BCA 3rd Semester Project
+            </span>
+            <span class="px-2.5 py-1 rounded-md bg-purple-950/80 border border-purple-700 text-purple-300 text-xs font-semibold font-mono">
+              Machine Learning Analytics
+            </span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3">
+            <i class="fa-solid fa-brain text-indigo-400"></i>
+            AI Student Performance Prediction
+          </h1>
+          <p class="text-slate-300 text-sm max-w-2xl">
+            Intelligent Machine Learning System for Educational Analytics. Predicts performance outcomes (<span class="text-rose-400 font-semibold">Poor</span>, <span class="text-sky-400 font-semibold">Average</span>, <span class="text-emerald-400 font-semibold">Good</span>) based on attendance, internal tests, daily study hours, and historical scores.
+          </p>
+        </div>
+
+        <!-- Animated Hero Visual Illustration -->
+        <div class="relative group hidden sm:block">
+          <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+          <img 
+            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=500&q=80" 
+            alt="Students Learning AI" 
+            onerror="this.onerror=null; this.src='https://placehold.co/500x300/1e1b4b/818cf8?text=AI+Educational+Analytics';"
+            class="relative w-48 lg:w-56 h-32 object-cover rounded-xl border border-slate-700 shadow-xl transition transform group-hover:scale-105 animate-float"
+          />
+        </div>
+
+        <!-- Quick Navigation Tabs -->
+        <nav class="flex flex-wrap items-center gap-1.5 bg-slate-900/90 p-1.5 rounded-xl border border-slate-800 w-full lg:w-auto">
+          <a href="#predictor" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm transition flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders"></i> Predictor
+          </a>
+          <a href="#analytics" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-chart-line"></i> Analytics
+          </a>
+          <a href="#tree-view" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-sitemap"></i> Decision Tree
+          </a>
+          <a href="#support" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-headset"></i> Support
+          </a>
+          <a href="#location" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-location-dot"></i> Location
+          </a>
+          <a href="#team" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-users"></i> Team
+          </a>
+        </nav>
+      </header>
+
+      <!-- SECTION 1: INTERACTIVE ML PREDICTOR SIMULATOR -->
+      <section id="predictor" class="scroll-mt-8 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-microchip text-indigo-400"></i> Real-Time Prediction Engine
+            </h2>
+            <p class="text-xs text-slate-400">Adjust input feature parameters (Feature Set X) to simulate decision outcome (Target Y)</p>
+          </div>
+          <!-- Preset Buttons -->
+          <div class="flex flex-wrap gap-2">
+            <button onclick="applyPreset(85, 78, 4.0, 80)" class="px-3 py-1.5 rounded-lg text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-400 font-semibold shadow-sm transition flex items-center gap-1.5">
+              <i class="fa-solid fa-bookmark"></i> Preset 1: Average
+            </button>
+            <button onclick="applyPreset(92, 90, 6.5, 88)" class="px-3 py-1.5 rounded-lg text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 text-emerald-400 font-semibold shadow-sm transition flex items-center gap-1.5">
+              <i class="fa-solid fa-star"></i> Preset 2: High Achiever
+            </button>
+            <button onclick="applyPreset(45, 35, 1.5, 42)" class="px-3 py-1.5 rounded-lg text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 text-rose-400 font-semibold shadow-sm transition flex items-center gap-1.5">
+              <i class="fa-solid fa-triangle-exclamation"></i> Preset 3: At-Risk
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+          
+          <!-- INPUT SLIDERS FORM (5 Cols) -->
+          <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-sm">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-sliders text-indigo-400"></i> Input Parameters
+              </span>
+              <span class="text-[10px] font-mono text-indigo-300 bg-indigo-950 px-2 py-0.5 rounded border border-indigo-800">Inputs (X)</span>
+            </div>
+
+            <!-- 1. Attendance Rate -->
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs font-semibold">
+                <label for="inputAttendance" class="text-slate-300 flex items-center gap-2">
+                  <i class="fa-solid fa-calendar-check text-indigo-400 w-4"></i> Attendance Rate (%)
+                </label>
+                <span id="valAttendance" class="text-indigo-400 font-mono font-bold">85%</span>
+              </div>
+              <input type="range" id="inputAttendance" min="0" max="100" value="85" class="w-full accent-indigo-500 h-2 bg-slate-800 rounded-lg cursor-pointer" oninput="calculatePrediction()">
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>0% (Critical)</span>
+                <span>75% (Required)</span>
+                <span>100% (Perfect)</span>
+              </div>
+            </div>
+
+            <!-- 2. Internal Marks -->
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs font-semibold">
+                <label for="inputInternal" class="text-slate-300 flex items-center gap-2">
+                  <i class="fa-solid fa-pen-ruler text-purple-400 w-4"></i> Internal Assessment (Marks)
+                </label>
+                <span id="valInternal" class="text-purple-400 font-mono font-bold">78 / 100</span>
+              </div>
+              <input type="range" id="inputInternal" min="0" max="100" value="78" class="w-full accent-purple-500 h-2 bg-slate-800 rounded-lg cursor-pointer" oninput="calculatePrediction()">
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>0 Marks</span>
+                <span>50 Marks</span>
+                <span>100 Marks</span>
+              </div>
+            </div>
+
+            <!-- 3. Daily Study Hours -->
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs font-semibold">
+                <label for="inputStudy" class="text-slate-300 flex items-center gap-2">
+                  <i class="fa-solid fa-clock text-pink-400 w-4"></i> Daily Study Hours
+                </label>
+                <span id="valStudy" class="text-pink-400 font-mono font-bold">4.0 hrs/day</span>
+              </div>
+              <input type="range" id="inputStudy" min="0" max="12" step="0.5" value="4.0" class="w-full accent-pink-500 h-2 bg-slate-800 rounded-lg cursor-pointer" oninput="calculatePrediction()">
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>0 hrs</span>
+                <span>4 hrs</span>
+                <span>12 hrs</span>
+              </div>
+            </div>
+
+            <!-- 4. Previous Exam Marks -->
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs font-semibold">
+                <label for="inputPrev" class="text-slate-300 flex items-center gap-2">
+                  <i class="fa-solid fa-graduation-cap text-cyan-400 w-4"></i> Previous Exam Marks
+                </label>
+                <span id="valPrev" class="text-cyan-400 font-mono font-bold">80 / 100</span>
+              </div>
+              <input type="range" id="inputPrev" min="0" max="100" value="80" class="w-full accent-cyan-500 h-2 bg-slate-800 rounded-lg cursor-pointer" oninput="calculatePrediction()">
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>0 Marks</span>
+                <span>50 Marks</span>
+                <span>100 Marks</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PREDICTION OUTPUT & INFERENCE RESULTS CARD (7 Cols) -->
+          <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between space-y-6 shadow-sm">
+            <div class="space-y-5">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-bullseye text-emerald-400"></i> Decision Tree Classification Output
+                </span>
+                <span class="text-[10px] font-mono text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Target Output (Y)</span>
+              </div>
+
+              <!-- Animated Main Status Box -->
+              <div id="outputContainer" class="p-6 rounded-xl bg-gradient-to-r from-slate-900 to-indigo-950/40 border border-indigo-700/60 transition-all duration-300 flex flex-col sm:flex-row items-center justify-between gap-6 glow-indigo">
+                <div class="space-y-2 text-center sm:text-left">
+                  <div class="text-xs font-mono uppercase tracking-widest text-slate-400">Predicted Category</div>
+                  <div id="outputBadge" class="text-4xl sm:text-5xl font-black text-sky-400 tracking-tight flex items-center justify-center sm:justify-start gap-3">
+                    <span>AVERAGE</span>
+                    <i id="outputIcon" class="fa-solid fa-circle-check text-3xl"></i>
+                  </div>
+                  <p id="outputDesc" class="text-xs text-slate-300 max-w-md">
+                    Student displays consistent performance standards. Low probability of failure, with moderate scope for academic honors.
+                  </p>
+                </div>
+
+                <!-- Confidence Gauge -->
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-center min-w-[140px] space-y-1 shadow-sm">
+                  <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Model Accuracy</div>
+                  <div id="confidenceVal" class="text-3xl font-black font-mono text-indigo-400">92.4%</div>
+                  <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                    <div id="confidenceBar" class="bg-indigo-500 h-full transition-all duration-500" style="width: 92.4%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- AI Advisory & Insight Metrics -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1">
+                  <div class="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-chart-pie text-indigo-400"></i> Primary Driving Factor
+                  </div>
+                  <div id="primaryFactorText" class="text-xs font-medium text-slate-200">
+                    Balanced Attendance (85%) combined with standard internal marks.
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1">
+                  <div class="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-lightbulb text-amber-400"></i> Early Action Recommendation
+                  </div>
+                  <div id="actionRecommendationText" class="text-xs font-medium text-slate-200">
+                    Increase daily study routine by +1.0 hour to transition into GOOD category.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Model Parameters Summary Footnote -->
+            <div class="text-[11px] text-slate-500 font-mono border-t border-slate-800 pt-3 flex flex-wrap justify-between items-center gap-2">
+              <span>Classifier: Scikit-learn DecisionTreeClassifier</span>
+              <span>Splitting Metric: Gini Impurity</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SECTION 2: INTERACTIVE DATA ANALYTICS & CHARTS -->
+      <section id="analytics" class="scroll-mt-8 space-y-6 pt-6 border-t border-slate-800">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-chart-area text-purple-400"></i> Exploratory Data Analytics & Correlation
+          </h2>
+          <p class="text-xs text-slate-400">Visual pattern discovery and statistical relationship checking across dataset features</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          <!-- Chart 1: Target Class Bar Graph -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 class="text-xs font-bold text-slate-200 flex items-center gap-2 uppercase tracking-wider">
+                <i class="fa-solid fa-chart-column text-rose-400"></i> Target Distribution Bar Graph
+              </h3>
+              <span class="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded font-mono">Count</span>
+            </div>
+            <div class="h-56 relative">
+              <canvas id="targetDistributionChart"></canvas>
+            </div>
+            <p class="text-xs text-slate-400 text-center">
+              Distribution of student performance classes across dataset: Poor, Average, and Good.
+            </p>
+          </div>
+
+          <!-- Chart 2: Scatter Plot (Attendance vs Previous Marks) -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 class="text-xs font-bold text-slate-200 flex items-center gap-2 uppercase tracking-wider">
+                <i class="fa-solid fa-chart-line text-sky-400"></i> Attendance vs Marks Scatter Graph
+              </h3>
+              <span class="text-[10px] bg-sky-950 text-sky-300 border border-sky-800 px-2 py-0.5 rounded font-mono">Scatter</span>
+            </div>
+            <div class="h-56 relative">
+              <canvas id="scatterAttendanceMarksChart"></canvas>
+            </div>
+            <p class="text-xs text-slate-400 text-center">
+              Positive linear relationship between student attendance rate (%) and previous exam scores.
+            </p>
+          </div>
+
+          <!-- Heatmap Table Matrix -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 md:col-span-2 lg:col-span-1 shadow-sm">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 class="text-xs font-bold text-slate-200 flex items-center gap-2 uppercase tracking-wider">
+                <i class="fa-solid fa-border-all text-purple-400"></i> Correlation Heatmap Matrix
+              </h3>
+              <span class="text-[10px] bg-purple-950 text-purple-300 border border-purple-800 px-2 py-0.5 rounded font-mono">Heatmap</span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs text-left text-slate-300 font-mono">
+                <thead class="text-[10px] text-slate-400 uppercase bg-slate-950">
+                  <tr>
+                    <th class="py-2 px-3">Feature</th>
+                    <th class="py-2 px-2 text-center">Att.</th>
+                    <th class="py-2 px-2 text-center">Int.</th>
+                    <th class="py-2 px-2 text-center">Prev.</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800">
+                  <tr>
+                    <td class="py-2.5 px-3 font-medium text-slate-200">Attendance</td>
+                    <td class="py-2 px-2 text-center bg-indigo-600 text-white font-bold rounded">1.00</td>
+                    <td class="py-2 px-2 text-center bg-indigo-950 text-indigo-300 font-semibold border border-indigo-800">0.65</td>
+                    <td class="py-2 px-2 text-center bg-indigo-900 text-indigo-200 font-semibold border border-indigo-700">0.82</td>
+                  </tr>
+                  <tr>
+                    <td class="py-2.5 px-3 font-medium text-slate-200">Internal Marks</td>
+                    <td class="py-2 px-2 text-center bg-indigo-950 text-indigo-300 font-semibold border border-indigo-800">0.65</td>
+                    <td class="py-2 px-2 text-center bg-indigo-600 text-white font-bold rounded">1.00</td>
+                    <td class="py-2 px-2 text-center bg-indigo-900 text-indigo-200 font-semibold border border-indigo-700">0.71</td>
+                  </tr>
+                  <tr>
+                    <td class="py-2.5 px-3 font-medium text-slate-200">Prev. Marks</td>
+                    <td class="py-2 px-2 text-center bg-indigo-900 text-indigo-200 font-semibold border border-indigo-700">0.82</td>
+                    <td class="py-2 px-2 text-center bg-indigo-900 text-indigo-200 font-semibold border border-indigo-700">0.71</td>
+                    <td class="py-2 px-2 text-center bg-indigo-600 text-white font-bold rounded">1.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="text-xs text-slate-400 text-center">
+              Highlights strong correlation (0.82) between attendance and exam scores for classification.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SECTION 3: DECISION TREE VISUAL ARCHITECTURE EXPLORER -->
+      <section id="tree-view" class="scroll-mt-8 space-y-6 pt-6 border-t border-slate-800">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-diagram-project text-emerald-400"></i> Decision Tree Classifier Architecture
+            </h2>
+            <p class="text-xs text-slate-400">Visual breakdown of root splits, decision nodes, and terminal leaves</p>
+          </div>
+          <span class="text-xs text-indigo-300 font-mono bg-indigo-950 border border-indigo-800 px-3 py-1 rounded-full self-start sm:self-auto">
+            Live Path Highlighted below
+          </span>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 overflow-x-auto shadow-sm">
+          <div class="min-w-[700px] flex flex-col items-center space-y-8 py-4">
+
+            <!-- ROOT NODE -->
+            <div id="treeNodeRoot" class="tree-node px-6 py-3 rounded-xl bg-slate-950 border-2 border-indigo-500 text-center transition-all duration-300 shadow-md">
+              <div class="text-[10px] font-mono uppercase tracking-widest text-indigo-400 font-bold">Root Node</div>
+              <div class="text-sm font-bold text-slate-100">Attendance Rate &ge; 70%?</div>
+              <div class="text-[10px] text-slate-400 font-mono mt-0.5">Primary Feature Split</div>
+            </div>
+
+            <!-- LEVEL 1 BRANCH LEADS -->
+            <div class="w-2/3 flex justify-between text-xs font-mono font-bold">
+              <span class="text-rose-400 flex items-center gap-1"><i class="fa-solid fa-arrow-down-left"></i> No (&lt; 70%)</span>
+              <span class="text-emerald-400 flex items-center gap-1">Yes (&ge; 70%) <i class="fa-solid fa-arrow-down-right"></i></span>
+            </div>
+
+            <!-- DECISION LEVEL 2 -->
+            <div class="w-full flex justify-around">
+
+              <!-- LEFT BRANCH: LOW ATTENDANCE NODE -->
+              <div class="flex flex-col items-center space-y-6">
+                <div id="treeNodeLeft" class="tree-node px-5 py-3 rounded-xl bg-slate-950 border border-rose-500/60 text-center transition-all duration-300 shadow-sm">
+                  <div class="text-[10px] font-mono uppercase text-rose-400 font-bold">Decision Node</div>
+                  <div class="text-xs font-bold text-slate-200">Study Hours &gt; 3.0 hrs?</div>
+                </div>
+
+                <!-- LEFT LEAF TERMINALS -->
+                <div class="flex gap-8 text-xs font-mono">
+                  <div id="treeNodePoor" class="tree-node px-5 py-2.5 rounded-lg bg-rose-950/80 border border-rose-500 text-rose-300 font-bold text-center shadow-sm">
+                    <div class="text-[9px] uppercase text-rose-400">Terminal Node</div>
+                    <span>POOR</span>
+                  </div>
+                  <div id="treeNodeAvgLow" class="tree-node px-5 py-2.5 rounded-lg bg-sky-950/80 border border-sky-500 text-sky-300 font-bold text-center shadow-sm">
+                    <div class="text-[9px] uppercase text-sky-400">Terminal Node</div>
+                    <span>AVERAGE</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT BRANCH: HIGH ATTENDANCE NODE -->
+              <div class="flex flex-col items-center space-y-6">
+                <div id="treeNodeRight" class="tree-node px-5 py-3 rounded-xl bg-slate-950 border border-emerald-500/60 text-center transition-all duration-300 shadow-sm">
+                  <div class="text-[10px] font-mono uppercase text-emerald-400 font-bold">Decision Node</div>
+                  <div class="text-xs font-bold text-slate-200">Previous Marks &ge; 75?</div>
+                </div>
+
+                <!-- RIGHT LEAF TERMINALS -->
+                <div class="flex gap-8 text-xs font-mono">
+                  <div id="treeNodeAvgHigh" class="tree-node px-5 py-2.5 rounded-lg bg-sky-950/80 border border-sky-500 text-sky-300 font-bold text-center shadow-sm">
+                    <div class="text-[9px] uppercase text-sky-400">Terminal Node</div>
+                    <span>AVERAGE</span>
+                  </div>
+                  <div id="treeNodeGood" class="tree-node px-5 py-2.5 rounded-lg bg-emerald-950/80 border border-emerald-500 text-emerald-300 font-bold text-center shadow-sm">
+                    <div class="text-[9px] uppercase text-emerald-400">Terminal Node</div>
+                    <span>GOOD</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- NEW SECTION 4: CUSTOMER SUPPORT & LIVE AI CHAT DESK -->
+      <section id="support" class="scroll-mt-8 space-y-6 pt-6 border-t border-slate-800">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-headset text-indigo-400"></i> Academic Helpdesk & Student Support
+          </h2>
+          <p class="text-xs text-slate-400">Contact our academic coordinators or ask our AI Support Assistant for instant guidance</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          <!-- Contact Form (7 Cols) -->
+          <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-3">
+              <i class="fa-solid fa-paper-plane text-indigo-400"></i> Submit Inquiry / Support Request
+            </h3>
+
+            <form onsubmit="handleSupportSubmit(event)" class="space-y-4 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-slate-300 font-semibold mb-1">Full Name</label>
+                  <input type="text" required placeholder="e.g. Rahul Sharma" class="w-full px-3 py-2 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 bg-slate-950 text-slate-100">
+                </div>
+                <div>
+                  <label class="block text-slate-300 font-semibold mb-1">Student Roll No. / Email</label>
+                  <input type="email" required placeholder="student@university.edu" class="w-full px-3 py-2 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 bg-slate-950 text-slate-100">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-semibold mb-1">Inquiry Category</label>
+                <select class="w-full px-3 py-2 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 bg-slate-950 text-slate-300">
+                  <option>ML Prediction Clarification</option>
+                  <option>Attendance Recovery Counseling</option>
+                  <option>Internal Assessment Grievance</option>
+                  <option>General Academic Query</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-slate-300 font-semibold mb-1">Message Detail</label>
+                <textarea rows="3" required placeholder="Write your question or request here..." class="w-full px-3 py-2 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 bg-slate-950 text-slate-100"></textarea>
+              </div>
+
+              <div id="supportAlert" class="hidden p-3 rounded-lg bg-emerald-950 border border-emerald-800 text-emerald-300 font-medium">
+                <i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i> Support ticket created successfully! Our team will contact you shortly.
+              </div>
+
+              <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg shadow transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i> Submit Ticket
+              </button>
+            </form>
+          </div>
+
+          <!-- Live AI Virtual Assistant (5 Cols) -->
+          <div class="lg:col-span-5 bg-gradient-to-b from-indigo-950/40 to-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-sm space-y-4">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow">
+                    AI
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold text-white">Virtual Academic Assistant</h3>
+                    <p class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online 24/7
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chat messages box -->
+              <div id="chatBox" class="my-4 space-y-3 h-48 overflow-y-auto p-2 text-xs">
+                <div class="flex items-start gap-2">
+                  <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl rounded-tl-none text-slate-300 max-w-[85%] shadow-sm">
+                    Hello! I'm your AI counselor. Ask me how to improve your predicted performance or how our Decision Tree model works!
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat input -->
+            <div class="flex gap-2">
+              <input type="text" id="chatInput" placeholder="Ask AI assistant..." onkeypress="if(event.key==='Enter') sendChatMessage()" class="flex-grow px-3 py-2 border border-slate-700 rounded-lg text-xs bg-slate-950 text-slate-100 focus:outline-none focus:border-indigo-500">
+              <button onclick="sendChatMessage()" class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition text-xs font-bold">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- NEW SECTION 5: CAMPUS LOCATION & INTERACTIVE MAP -->
+      <section id="location" class="scroll-mt-8 space-y-6 pt-6 border-t border-slate-800">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-location-dot text-rose-500"></i> Campus Location & Contact Details
+          </h2>
+          <p class="text-xs text-slate-400">Teerthanker Mahaveer University (TMU) - Department of Computer Applications</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Location Details Card -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-sm md:col-span-1 flex flex-col justify-between">
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold text-white border-b border-slate-800 pb-2">
+                University Address
+              </h3>
+
+              <!-- University Campus Thumbnail Image -->
+              <div class="relative overflow-hidden rounded-xl border border-slate-800 group">
+                <img 
+                  src="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=600&q=80" 
+                  alt="University Campus" 
+                  onerror="this.onerror=null; this.src='https://placehold.co/600x300/0f172a/6366f1?text=TMU+Campus+Moradabad';"
+                  class="w-full h-28 object-cover group-hover:scale-110 transition duration-500"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80"></div>
+                <span class="absolute bottom-1.5 left-2 text-[10px] font-mono text-indigo-300 font-semibold">TMU Main Campus</span>
+              </div>
+
+              <div class="space-y-3 text-xs text-slate-300">
+                <div class="flex items-start gap-3">
+                  <i class="fa-solid fa-building-columns text-indigo-400 text-sm mt-0.5"></i>
+                  <div>
+                    <div class="font-bold text-slate-100">Teerthanker Mahaveer University</div>
+                    <div class="text-slate-400">Department of Computer Applications (CCSIT)</div>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                  <i class="fa-solid fa-map-pin text-rose-400 text-sm mt-0.5"></i>
+                  <div>
+                    <div class="font-bold text-slate-100">Campus Location</div>
+                    <div class="text-slate-400">Delhi Road, NH-24, Moradabad, Uttar Pradesh - 244001</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <i class="fa-solid fa-map-pin text-rose-400 text-sm mt-0.5"></i>
+                <div>
+                  <div class="font-bold text-slate-100">Campus Location</div>
+                  <div class="text-slate-400">Delhi Road, NH-24, Moradabad, Uttar Pradesh - 244001</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <i class="fa-solid fa-clock text-emerald-400 text-sm mt-0.5"></i>
+                <div>
+                  <div class="font-bold text-slate-100">Working Hours</div>
+                  <div class="text-slate-400">Mon - Sat: 9:00 AM - 5:00 PM</div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <i class="fa-solid fa-phone text-indigo-400 text-sm mt-0.5"></i>
+                <div>
+                  <div class="font-bold text-slate-100">Mobile Number</div>
+                  <a href="tel:6398868486" class="text-indigo-400 font-semibold hover:underline">+91 6398868486</a>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <i class="fa-solid fa-envelope text-sky-400 text-sm mt-0.5"></i>
+                <div>
+                  <div class="font-bold text-slate-100">Direct Email</div>
+                  <a href="mailto:manishchauhan48023@gmail.com" class="text-indigo-400 font-semibold hover:underline">manishchauhan48023@gmail.com</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Map Simulation -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm md:col-span-2 flex flex-col justify-between">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
+              <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5 uppercase">
+                <i class="fa-solid fa-map text-indigo-400"></i> TMU Campus Map Navigation
+              </span>
+              <span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded font-mono">
+                GPS Verified
+              </span>
+            </div>
+
+            <!-- Simulated Map Visual -->
+            <div class="relative w-full h-56 bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+              <!-- Grid lines for map effect -->
+              <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
+              
+              <!-- Road simulation -->
+              <div class="absolute w-full h-8 bg-slate-800 rotate-12"></div>
+              <div class="absolute h-full w-8 bg-slate-800 -rotate-45"></div>
+
+              <!-- Map Pin Marker -->
+              <div class="relative z-10 text-center animate-bounce">
+                <i class="fa-solid fa-location-dot text-4xl text-rose-500 drop-shadow-md"></i>
+                <div class="bg-slate-900 text-white text-[10px] font-bold font-mono px-2 py-0.5 rounded shadow mt-1 border border-slate-700">
+                  TMU Moradabad (BCA AI Lab)
+                </div>
+              </div>
+
+              <!-- Quick action overlay -->
+              <div class="absolute bottom-2 right-2 z-10">
+                <button onclick="alert('Directions feature activated! Location pinned to Teerthanker Mahaveer University (TMU), Moradabad.')" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg shadow hover:bg-indigo-500 transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-diamond-turn-right"></i> Get Directions to TMU
+                </button>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 font-mono mt-3 text-center">
+              Location: Teerthanker Mahaveer University (TMU), Moradabad, NH-24, UP • Contact: 6398868486
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SECTION 6: STEP-BY-STEP PROJECT WORKFLOW -->
+      <section class="scroll-mt-8 space-y-6 pt-6 border-t border-slate-800">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-cyan-400"></i> Project Execution Steps (1–18 Summary)
+          </h2>
+          <p class="text-xs text-slate-400">Standard machine learning pipeline steps implemented in our project design</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Step Block 1 -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-sm">
+            <div class="flex items-center justify-between text-xs text-indigo-400 font-mono font-bold">
+              <span>STEPS 1–4</span>
+              <i class="fa-solid fa-bullseye"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-200">Problem & Aim Definition</h3>
+            <p class="text-xs text-slate-400">
+              Identified early detection challenge for educators. Formulated ML classification target into Poor, Average, and Good categories.
+            </p>
+          </div>
+
+          <!-- Step Block 2 -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-sm">
+            <div class="flex items-center justify-between text-xs text-purple-400 font-mono font-bold">
+              <span>STEPS 5–9</span>
+              <i class="fa-solid fa-database"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-200">Data Preparation & Cleaning</h3>
+            <p class="text-xs text-slate-400">
+              Verified dataset structure, performed missing value checks, calculated summary stats (Mean, Min, Max), and balanced class targets.
+            </p>
+          </div>
+
+          <!-- Step Block 3 -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-sm">
+            <div class="flex items-center justify-between text-xs text-pink-400 font-mono font-bold">
+              <span>STEPS 10–13</span>
+              <i class="fa-solid fa-chart-pie"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-200">Graphs & Correlation</h3>
+            <p class="text-xs text-slate-400">
+              Generated Target Bar Graph, Scatter Plot of Attendance vs. Marks, and Correlation Matrix Heatmap to capture key feature relationships.
+            </p>
+          </div>
+
+          <!-- Step Block 4 -->
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-sm">
+            <div class="flex items-center justify-between text-xs text-emerald-400 font-mono font-bold">
+              <span>STEPS 14–18</span>
+              <i class="fa-solid fa-gears"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-200">ML Model & Accuracy</h3>
+            <p class="text-xs text-slate-400">
+              Trained Decision Tree Classifier on feature set X. Verified model accuracy and successfully executed sample test case inferencing.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 7: TEAM CREDIT CARDS -->
+      <section id="team" class="scroll-mt-8 space-y-6 pt-6 border-t border-slate-800">
+        <div class="text-center space-y-1">
+          <h2 class="text-xl font-bold text-white">Project Presentation Team</h2>
+          <p class="text-xs text-slate-400">BCA 3rd Semester • Department of Computer Applications</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Team Leader -->
+          <div class="bg-slate-900/90 border border-indigo-700/60 rounded-2xl p-6 text-center space-y-3 relative overflow-hidden group hover:border-indigo-500 transition shadow-md animate-glow-border">
+            <div class="relative w-20 h-20 mx-auto">
+              <img 
+                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80" 
+                alt="Manish Chauhan" 
+                onerror="this.onerror=null; this.src='https://placehold.co/150x150/4338ca/ffffff?text=MC';"
+                class="w-20 h-20 rounded-full object-cover border-2 border-indigo-400 shadow-md group-hover:scale-105 transition duration-300"
+              />
+              <span class="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-slate-900" title="Active Lead"></span>
+            </div>
+            <div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-amber-950 text-amber-300 border border-amber-800">
+                Team Leader
+              </span>
+              <h3 class="text-lg font-bold text-white mt-1">Manish Chauhan</h3>
+              <p class="text-xs text-indigo-400 font-mono">BCA 3rd Semester</p>
+            </div>
+            <p class="text-xs text-slate-400">
+              Lead data preprocessing, Decision Tree Classifier model implementation, and prediction pipeline logic.
+            </p>
+          </div>
+
+          <!-- Team Member 1 -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 text-center space-y-3 group hover:border-purple-500/60 transition shadow-sm">
+            <div class="relative w-20 h-20 mx-auto">
+              <img 
+                src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80" 
+                alt="Subham Patel" 
+                onerror="this.onerror=null; this.src='https://placehold.co/150x150/6b21a8/ffffff?text=SP';"
+                class="w-20 h-20 rounded-full object-cover border-2 border-purple-400 shadow-md group-hover:scale-105 transition duration-300"
+              />
+            </div>
+            <div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-slate-950 text-slate-300 border border-slate-800">
+                Team Member
+              </span>
+              <h3 class="text-lg font-bold text-white mt-1">Subham Patel</h3>
+              <p class="text-xs text-purple-400 font-mono">BCA 3rd Semester</p>
+            </div>
+            <p class="text-xs text-slate-400">
+              Exploratory Data Analysis (EDA), Statistical summary calculation, and target distribution validation.
+            </p>
+          </div>
+
+          <!-- Team Member 2 -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 text-center space-y-3 group hover:border-pink-500/60 transition shadow-sm">
+            <div class="relative w-20 h-20 mx-auto">
+              <img 
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" 
+                alt="Abhinav Vaish" 
+                onerror="this.onerror=null; this.src='https://placehold.co/150x150/9d174d/ffffff?text=AV';"
+                class="w-20 h-20 rounded-full object-cover border-2 border-pink-400 shadow-md group-hover:scale-105 transition duration-300"
+              />
+            </div>
+            <div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-slate-950 text-slate-300 border border-slate-800">
+                Team Member
+              </span>
+              <h3 class="text-lg font-bold text-white mt-1">Abhinav Vaish</h3>
+              <p class="text-xs text-pink-400 font-mono">BCA 3rd Semester</p>
+            </div>
+            <p class="text-xs text-slate-400">
+              Visual analytics development (Bar, Scatter plots, Correlation heatmap matrix) and presentation layout.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- FOOTER WITH SOCIAL MEDIA ICONS -->
+      <footer class="pt-6 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 gap-6">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-graduation-cap text-indigo-400"></i>
+          <span>AI-Based Student Performance Prediction Project</span>
+        </div>
+
+        <!-- Social Media Icons Links -->
+        <div class="flex items-center space-x-4">
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-700 hover:border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center text-base transition duration-300 shadow-md" title="YouTube Channel">
+            <i class="fa-brands fa-youtube"></i>
+          </a>
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-700 hover:border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white flex items-center justify-center text-base transition duration-300 shadow-md" title="Instagram Profile">
+            <i class="fa-brands fa-instagram"></i>
+          </a>
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-700 hover:border-indigo-400 text-indigo-400 hover:bg-indigo-600 hover:text-white flex items-center justify-center text-base transition duration-300 shadow-md" title="GitHub Repository">
+            <i class="fa-brands fa-github"></i>
+          </a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-700 hover:border-sky-500 text-sky-400 hover:bg-sky-500 hover:text-white flex items-center justify-center text-base transition duration-300 shadow-md" title="LinkedIn Profile">
+            <i class="fa-brands fa-linkedin-in"></i>
+          </a>
+          <a href="mailto:manishchauhan48023@gmail.com" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-700 hover:border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-white flex items-center justify-center text-base transition duration-300 shadow-md" title="Email Us">
+            <i class="fa-solid fa-envelope"></i>
+          </a>
+        </div>
+
+        <div>
+          <span>BCA 3rd Semester Academic Presentation</span>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: THREE.JS 3D BACKGROUND, CHARTS, PREDICTION LOGIC & SUPPORT HELPDESK -->
+  <script>
+    // ==========================================
+    // 1. THREE.JS 3D BACKGROUND SYSTEM (DARK NEON SLATE THEME)
+    // ==========================================
+    let scene, camera, renderer, particlesMesh;
+
+    function init3D() {
+      const canvas = document.getElementById('bg-canvas');
+      if (!canvas) return;
+
+      if (typeof THREE === 'undefined') {
+        console.warn('Three.js library is not loaded. Skipping 3D background animation.');
+        return;
+      }
+
+      try {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 30;
+
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Particle geometry (Vibrant Indigo, Violet & Emerald for Dark Theme)
+        const particleCount = 220;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+
+        const colorPalette = [
+          new THREE.Color(0x818cf8), // indigo glow
+          new THREE.Color(0xc084fc), // purple glow
+          new THREE.Color(0x34d399)  // emerald glow
+        ];
+
+        for (let i = 0; i < particleCount * 3; i += 3) {
+          positions[i] = (Math.random() - 0.5) * 80;
+          positions[i + 1] = (Math.random() - 0.5) * 80;
+          positions[i + 2] = (Math.random() - 0.5) * 80;
+
+          const c = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+          colors[i] = c.r;
+          colors[i + 1] = c.g;
+          colors[i + 2] = c.b;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+          size: 1.4,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.5
+        });
+
+        particlesMesh = new THREE.Points(geometry, material);
+        scene.add(particlesMesh);
+
+        // Mouse move interaction
+        window.addEventListener('mousemove', (e) => {
+          const mouseX = (e.clientX / window.innerWidth - 0.5) * 0.4;
+          const mouseY = (e.clientY / window.innerHeight - 0.5) * 0.4;
+          if (particlesMesh) {
+            particlesMesh.rotation.y = mouseX;
+            particlesMesh.rotation.x = mouseY;
+          }
+        });
+
+        window.addEventListener('resize', onWindowResize);
+        animate3D();
+      } catch (err) {
+        console.error('Error initializing Three.js 3D background:', err);
+      }
+    }
+
+    function animate3D() {
+      if (typeof THREE === 'undefined' || !renderer) return;
+      requestAnimationFrame(animate3D);
+      if (particlesMesh) {
+        particlesMesh.rotation.y += 0.0012;
+        particlesMesh.rotation.x += 0.0004;
+      }
+      renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+      if (!camera || !renderer) return;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // ==========================================
+    // 2. ML PREDICTION SIMULATOR & DECISION TREE LOGIC
+    // ==========================================
+    function calculatePrediction() {
+      const att = parseFloat(document.getElementById('inputAttendance').value);
+      const internal = parseFloat(document.getElementById('inputInternal').value);
+      const study = parseFloat(document.getElementById('inputStudy').value);
+      const prev = parseFloat(document.getElementById('inputPrev').value);
+
+      // Update Slider Label Displays
+      document.getElementById('valAttendance').innerText = att + '%';
+      document.getElementById('valInternal').innerText = internal + ' / 100';
+      document.getElementById('valStudy').innerText = study.toFixed(1) + ' hrs/day';
+      document.getElementById('valPrev').innerText = prev + ' / 100';
+
+      // Reset Decision Tree Highlight Visuals
+      document.querySelectorAll('.tree-node').forEach(node => node.classList.remove('active-tree-node'));
+
+      // Root Node is always evaluated
+      document.getElementById('treeNodeRoot').classList.add('active-tree-node');
+
+      let category = "AVERAGE";
+      let confidence = 85.0;
+      let primaryFactor = "";
+      let recommendation = "";
+      let themeColor = "sky";
+      let iconClass = "fa-circle-check";
+
+      // Execute Decision Tree Logic Paths
+      if (att < 70) {
+        document.getElementById('treeNodeLeft').classList.add('active-tree-node');
+        if (study <= 3.0) {
+          document.getElementById('treeNodePoor').classList.add('active-tree-node');
+          category = "POOR";
+          confidence = Math.min(96.5, 88.0 + (70 - att) * 0.2);
+          themeColor = "rose";
+          iconClass = "fa-triangle-exclamation";
+          primaryFactor = "Critically Low Attendance (<70%) and insufficient study hours (≤3 hrs).";
+          recommendation = "Immediate academic counselor intervention required. Mandatory attendance recovery plan.";
+        } else {
+          document.getElementById('treeNodeAvgLow').classList.add('active-tree-node');
+          category = "AVERAGE";
+          confidence = 82.5;
+          themeColor = "sky";
+          iconClass = "fa-circle-info";
+          primaryFactor = "Attendance is low (<70%), but compensated by daily study hours (>3.0 hrs).";
+          recommendation = "Improve class attendance rate above 75% to prevent falling into the poor performance tier.";
+        }
+      } else {
+        document.getElementById('treeNodeRight').classList.add('active-tree-node');
+        if (prev >= 75) {
+          document.getElementById('treeNodeGood').classList.add('active-tree-node');
+          category = "GOOD";
+          confidence = Math.min(98.8, 86.0 + (prev - 75) * 0.4 + (att - 70) * 0.2);
+          themeColor = "emerald";
+          iconClass = "fa-circle-check";
+          primaryFactor = "High Attendance (≥70%) combined with strong historical marks (≥75).";
+          recommendation = "Maintain study routine. Eligible for advanced project assignments and peer mentorship.";
+        } else {
+          document.getElementById('treeNodeAvgHigh').classList.add('active-tree-node');
+          category = "AVERAGE";
+          confidence = 89.2;
+          themeColor = "sky";
+          iconClass = "fa-circle-check";
+          primaryFactor = "Good Attendance rate (≥70%), but previous marks remain under 75 threshold.";
+          recommendation = "Focus on targeted internal exam preparation to push previous exam score baseline higher.";
+        }
+      }
+
+      // Update UI Result Elements
+      const outputContainer = document.getElementById('outputContainer');
+      const outputBadge = document.getElementById('outputBadge');
+      const outputIcon = document.getElementById('outputIcon');
+      const outputDesc = document.getElementById('outputDesc');
+      const confidenceVal = document.getElementById('confidenceVal');
+      const confidenceBar = document.getElementById('confidenceBar');
+
+      outputBadge.children[0].innerText = category;
+      outputIcon.className = `fa-solid ${iconClass} text-3xl`;
+      confidenceVal.innerText = confidence.toFixed(1) + '%';
+      confidenceBar.style.width = confidence + '%';
+
+      document.getElementById('primaryFactorText').innerText = primaryFactor;
+      document.getElementById('actionRecommendationText').innerText = recommendation;
+
+      // Dark Mode Color Updates
+      if (category === "GOOD") {
+        outputContainer.className = `p-6 rounded-xl border transition-all duration-300 flex flex-col sm:flex-row items-center justify-between gap-6 glow-emerald bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border-emerald-500/70`;
+        outputBadge.className = "text-4xl sm:text-5xl font-black text-emerald-400 tracking-tight flex items-center justify-center sm:justify-start gap-3";
+        outputDesc.innerText = "High performance tier predicted. Demonstrates strong potential for distinction in end-semester assessments.";
+      } else if (category === "POOR") {
+        outputContainer.className = `p-6 rounded-xl border transition-all duration-300 flex flex-col sm:flex-row items-center justify-between gap-6 glow-rose bg-gradient-to-r from-rose-950/60 via-slate-900 to-slate-900 border-rose-500/70`;
+        outputBadge.className = "text-4xl sm:text-5xl font-black text-rose-400 tracking-tight flex items-center justify-center sm:justify-start gap-3";
+        outputDesc.innerText = "Student exhibits early academic risk indicators. Immediate intervention recommended to avoid course failure.";
+      } else {
+        outputContainer.className = `p-6 rounded-xl border transition-all duration-300 flex flex-col sm:flex-row items-center justify-between gap-6 glow-indigo bg-gradient-to-r from-slate-900 to-indigo-950/50 border-indigo-500/60`;
+        outputBadge.className = "text-4xl sm:text-5xl font-black text-sky-400 tracking-tight flex items-center justify-center sm:justify-start gap-3";
+        outputDesc.innerText = "Satisfactory baseline performance. Low risk of failure, with moderate growth capacity.";
+      }
+    }
+
+    function applyPreset(att, internal, study, prev) {
+      document.getElementById('inputAttendance').value = att;
+      document.getElementById('inputInternal').value = internal;
+      document.getElementById('inputStudy').value = study;
+      document.getElementById('inputPrev').value = prev;
+      calculatePrediction();
+    }
+
+    // ==========================================
+    // 3. SUPPORT HELPDESK & AI CHATBOT HANDLERS
+    // ==========================================
+    function handleSupportSubmit(e) {
+      e.preventDefault();
+      const alertBox = document.getElementById('supportAlert');
+      alertBox.classList.remove('hidden');
+      e.target.reset();
+      setTimeout(() => alertBox.classList.add('hidden'), 5000);
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chatBox = document.getElementById('chatBox');
+      
+      // Add user message
+      const userMsg = document.createElement('div');
+      userMsg.className = "flex items-start justify-end gap-2";
+      userMsg.innerHTML = `<div class="bg-indigo-600 text-white p-2.5 rounded-xl rounded-tr-none text-xs max-w-[85%] shadow-sm">${text}</div>`;
+      chatBox.appendChild(userMsg);
+
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Simulate AI response
+      setTimeout(() => {
+        let response = "Based on our Decision Tree classifier model, increasing daily study hours past 4.0 and keeping attendance above 75% maximizes the likelihood of achieving a GOOD grade!";
+        if (text.toLowerCase().includes('attendance')) {
+          response = "Attendance is the root node split parameter (≥70%). Falling below 70% puts a student at academic risk.";
+        } else if (text.toLowerCase().includes('manish') || text.toLowerCase().includes('team')) {
+          response = "This project was developed by Manish Chauhan (Team Leader), Subham Patel, and Abhinav Vaish for BCA 3rd Semester.";
+        }
+
+        const aiMsg = document.createElement('div');
+        aiMsg.className = "flex items-start gap-2";
+        aiMsg.innerHTML = `<div class="bg-white border border-slate-200 p-2.5 rounded-xl rounded-tl-none text-slate-700 text-xs max-w-[85%] shadow-sm">${response}</div>`;
+        chatBox.appendChild(aiMsg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }, 700);
+    }
+
+    // ==========================================
+    // 4. CHART.JS VISUALIZATIONS
+    // ==========================================
+    function initCharts() {
+      if (typeof Chart === 'undefined') return;
+
+      Chart.defaults.color = '#64748b';
+      Chart.defaults.font.family = 'Inter';
+
+      // 1. Target Distribution Bar Chart
+      const ctxDist = document.getElementById('targetDistributionChart').getContext('2d');
+      new Chart(ctxDist, {
+        type: 'bar',
+        data: {
+          labels: ['Poor', 'Average', 'Good'],
+          datasets: [{
+            label: 'Student Count',
+            data: [28, 62, 45],
+            backgroundColor: [
+              'rgba(244, 63, 94, 0.85)',
+              'rgba(56, 189, 248, 0.85)',
+              'rgba(16, 185, 129, 0.85)'
+            ],
+            borderColor: [
+              '#f43f5e',
+              '#38bdf8',
+              '#10b981'
+            ],
+            borderWidth: 1.5,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // 2. Attendance vs Previous Marks Scatter Plot
+      const ctxScatter = document.getElementById('scatterAttendanceMarksChart').getContext('2d');
+      new Chart(ctxScatter, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Poor',
+              data: [
+                {x: 40, y: 35}, {x: 45, y: 42}, {x: 50, y: 40}, {x: 55, y: 48}, {x: 60, y: 45}
+              ],
+              backgroundColor: '#f43f5e'
+            },
+            {
+              label: 'Average',
+              data: [
+                {x: 65, y: 55}, {x: 70, y: 62}, {x: 75, y: 68}, {x: 80, y: 72}, {x: 85, y: 78}
+              ],
+              backgroundColor: '#0284c7'
+            },
+            {
+              label: 'Good',
+              data: [
+                {x: 85, y: 82}, {x: 90, y: 88}, {x: 92, y: 92}, {x: 95, y: 96}, {x: 98, y: 94}
+              ],
+              backgroundColor: '#10b981'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { boxWidth: 10, font: { size: 10 } } }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Attendance Rate (%)', font: { size: 10 } },
+              grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            },
+            y: {
+              title: { display: true, text: 'Prev. Exam Marks', font: { size: 10 } },
+              grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            }
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // INITIALIZATION ON WINDOW LOAD
+    // ==========================================
+    // 4. CHART.JS VISUALIZATIONS (DARK THEME PRESETS)
+    // ==========================================
+    function initCharts() {
+      if (typeof Chart === 'undefined') return;
+
+      Chart.defaults.color = '#94a3b8';
+      Chart.defaults.font.family = 'Inter';
+
+      // 1. Target Distribution Bar Chart
+      const ctxDist = document.getElementById('targetDistributionChart').getContext('2d');
+      new Chart(ctxDist, {
+        type: 'bar',
+        data: {
+          labels: ['Poor', 'Average', 'Good'],
+          datasets: [{
+            label: 'Student Count',
+            data: [28, 62, 45],
+            backgroundColor: [
+              'rgba(244, 63, 94, 0.85)',
+              'rgba(56, 189, 248, 0.85)',
+              'rgba(16, 185, 129, 0.85)'
+            ],
+            borderColor: [
+              '#f43f5e',
+              '#38bdf8',
+              '#10b981'
+            ],
+            borderWidth: 1.5,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { grid: { color: 'rgba(255, 255, 255, 0.08)' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // 2. Attendance vs Previous Marks Scatter Plot
+      const ctxScatter = document.getElementById('scatterAttendanceMarksChart').getContext('2d');
+      new Chart(ctxScatter, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Poor',
+              data: [
+                {x: 40, y: 35}, {x: 45, y: 42}, {x: 50, y: 40}, {x: 55, y: 48}, {x: 60, y: 45}
+              ],
+              backgroundColor: '#f43f5e'
+            },
+            {
+              label: 'Average',
+              data: [
+                {x: 65, y: 55}, {x: 70, y: 62}, {x: 75, y: 68}, {x: 80, y: 72}, {x: 85, y: 78}
+              ],
+              backgroundColor: '#38bdf8'
+            },
+            {
+              label: 'Good',
+              data: [
+                {x: 85, y: 82}, {x: 90, y: 88}, {x: 92, y: 92}, {x: 95, y: 96}, {x: 98, y: 94}
+              ],
+              backgroundColor: '#10b981'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { boxWidth: 10, font: { size: 10 } } }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Attendance Rate (%)', font: { size: 10 } },
+              grid: { color: 'rgba(255, 255, 255, 0.08)' }
+            },
+            y: {
+              title: { display: true, text: 'Prev. Exam Marks', font: { size: 10 } },
+              grid: { color: 'rgba(255, 255, 255, 0.08)' }
+            }
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // INITIALIZATION ON WINDOW LOAD
+    // ==========================================
+    window.addEventListener('load', function() {
+      init3D();
+      initCharts();
+      calculatePrediction();
+    });
+  </script>
+</body>
+</html>
